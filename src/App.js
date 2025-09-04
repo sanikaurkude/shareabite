@@ -3,7 +3,8 @@ import Login from "./Login";
 import Signup from "./Signup";
 import Home from "./Home";
 import PostFood from "./PostFood";
-import MyPosts from "./MyPosts";   // ✅ Import MyPosts
+import MyPosts from "./MyPosts";
+import Ngos from "./NGOs";   // ✅ Import NGOs page
 import ProtectedRoute from "./ProtectedRoute";
 
 function App() {
@@ -31,13 +32,19 @@ function App() {
             </ProtectedRoute>
           }
         />
-
-        {/* ✅ New MyPosts Route */}
         <Route
           path="/myposts"
           element={
             <ProtectedRoute>
               <MyPosts />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/Ngos"
+          element={
+            <ProtectedRoute>
+              <Ngos />
             </ProtectedRoute>
           }
         />
