@@ -1,91 +1,82 @@
 import React, { useState } from "react";
-import { auth, provider } from "./Firebase/firebase";
-import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { auth, signInWithGoogle } from "./Firebase/firebase";
 
-function Login() {
+import { signInWithEmailAndPassword } from "firebase/auth";
+
+const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // ✅ Hook to redirect user
 
-  // Email/Password Login
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      alert("Login successful!");
-      navigate("/home");
+      alert("Login Successful!");
+      navigate("/home"); // ✅ Redirect user after login
     } catch (error) {
-      alert("Firebase: " + error.message);
+      alert("Login Failed: " + error.message);
     }
   };
 
-  // Google Login
   const handleGoogleLogin = async () => {
     try {
-      await signInWithPopup(auth, provider);
-      alert("Google Sign-In successful!");
-      navigate("/home");
+      await signInWithGoogle();
+      alert("Google Sign-in Successful!");
+      navigate("/home"); // ✅ Redirect user after Google login
     } catch (error) {
-      alert("Firebase: " + error.message);
+      alert("Google Sign-in Failed");
     }
   };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="bg-white p-8 rounded-2xl shadow-lg w-96">
-        <h1 className="text-2xl font-bold text-center mb-6 text-gray-800">
-          ShareABite Login
-        </h1>
+      <div className="bg-white shadow-lg rounded-lg p-6 w-96">
+        <h2 className="text-2xl font-bold mb-4 text-center">Login</h2>
 
-        {/* Email/Password Login */}
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Email</label>
-            <input
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Password</label>
-            <input
-              type="password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              required
-            />
-          </div>
+        <form onSubmit={handleLogin}>
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full p-2 mb-4 border rounded"
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full p-2 mb-4 border rounded"
+          />
           <button
             type="submit"
-            className="w-full bg-blue-500 text-white py-2 rounded-lg font-semibold hover:bg-blue-600 transition"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded"
           >
             Login
           </button>
         </form>
 
-        {/* Google Login */}
+        <div className="my-4 text-center text-gray-500">OR</div>
+
         <button
           onClick={handleGoogleLogin}
-          className="w-full mt-4 bg-red-500 text-white py-2 rounded-lg font-semibold hover:bg-red-600 transition"
+          className="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded"
         >
-          Continue with Google
+          Sign in with Google
         </button>
 
-        <p className="mt-4 text-center">
-          Don’t have an account?{" "}
-          <Link to="/signup" className="text-blue-600">Sign up</Link>
+        {/* ✅ Sign Up Link */}
+        <p className="mt-4 text-center text-sm text-gray-600">
+          Don't have an account?{" "}
+          <Link to="/signup" className="text-blue-600 hover:underline">
+            Sign Up
+          </Link>
         </p>
       </div>
     </div>
   );
-}
+};
 
 export default Login;
-

@@ -1,91 +1,79 @@
-import React, { useEffect, useState } from "react";
-import { auth, db } from "./Firebase/firebase";
-import { collection, onSnapshot, orderBy, query, getDocs } from "firebase/firestore";
-import { signOut } from "firebase/auth";
+import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Map from "./Map"; // ✅ Import Map
+import { signOut } from "firebase/auth";
+import { auth } from "./Firebase/firebase"; // ✅ Import auth
+import homepageImage from "./homepage.jpg";
 
-export default function Home() {
-  const [posts, setPosts] = useState([]);
-  const [ngos, setNgos] = useState({});
+const Home = () => {
   const navigate = useNavigate();
 
-  // ✅ Fetch posts in real-time
-  useEffect(() => {
-    const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      setPosts(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
-    });
-    return () => unsubscribe();
-  }, []);
-
-  // ✅ Fetch NGOs once
-  useEffect(() => {
-    const fetchNgos = async () => {
-      const querySnapshot = await getDocs(collection(db, "ngos"));
-      const ngoMap = {};
-      querySnapshot.forEach((doc) => {
-        ngoMap[doc.id] = doc.data().name;
-      });
-      setNgos(ngoMap);
-    };
-    fetchNgos();
-  }, []);
-
-  // ✅ Logout
-  const handleLogout = () => {
-    signOut(auth);
-    navigate("/login");
+  // ✅ Define Logout Function
+  const handleLogout = async () => {
+    try {
+      await signOut(auth); // ✅ Firebase Logout
+      navigate("/login"); // ✅ Redirect to login after logout
+    } catch (error) {
+      console.error("Logout Error:", error);
+    }
   };
 
   return (
-    <div>
+    <div
+      className="min-h-screen flex flex-col bg-cover bg-center"
+      style={{ backgroundImage: `url(${homepageImage})` }}
+    >
       {/* ✅ Navbar */}
-      <nav className="bg-blue-600 text-white p-4 flex justify-between fixed top-0 left-0 right-0 shadow-md z-50">
-        <h1 className="text-xl font-bold">ShareABite</h1>
-        <div className="space-x-4">
+      <nav className="bg-blue-600 bg-opacity-80 text-white p-4 flex justify-between fixed top-0 left-0 right-0 shadow-md z-50">
+        <h1 className="text-xl font-bold tracking-wide">🍽 ShareABite</h1>
+        <div className="space-x-6 hidden sm:flex">
+         
           <Link to="/postfood" className="hover:underline">Post Food</Link>
           <Link to="/myposts" className="hover:underline">My Posts</Link>
-          <button onClick={handleLogout} className="hover:underline">Logout</button>
+          <Link to="/Ngos" className="hover:underline">NGOs</Link>
+          <button
+            onClick={handleLogout}
+            className="hover:underline text-red-300"
+          >
+            Logout
+          </button>
         </div>
       </nav>
 
-      {/* ✅ Content */}
-      <div className="p-6 mt-20 grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Left: Meal List */}
-        <div>
-          <h3 className="text-xl font-semibold mb-4">Available Meals</h3>
-          {posts.length === 0 ? (
-            <p>No meals shared yet.</p>
-          ) : (
-            <ul className="space-y-2">
-              {posts.map((post) => (
-                <li key={post.id} className="border p-2 rounded">
-                  🍲 {post.meal} <br />
-                  📍 {post.location} <br />
-                  🏢 NGO:{" "}
-                  <span className="font-medium">
-                    {post.ngoId ? ngos[post.ngoId] || "Unknown NGO" : "Not assigned"}
-                  </span> <br />
-                  <span className="text-sm text-gray-500">Posted by: {post.userEmail}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+      {/* ✅ Main Content */}
+      <div className="flex flex-col justify-center items-center flex-grow pt-24 px-4 text-center bg-black bg-opacity-40">
+        <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6 drop-shadow-lg">
+          MEAL & FOOD DONATION
+        </h1>
 
-        {/* Right: Map */}
-        <div>
-          <h3 className="text-xl font-semibold mb-4">Map View</h3>
-          <Map posts={posts} /> {/* ✅ Pass posts with lat/lng to Map */}
+        <Link
+          to="/postfood"
+          className="bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-lg text-lg shadow-md"
+        >
+          Donate Now!
+        </Link>
+      </div>
+
+      {/* ✅ Contact Section */}
+      <div className="bg-white bg-opacity-90 shadow-md rounded-xl p-6 mx-auto mb-10 w-full max-w-2xl">
+        <div className="flex flex-col sm:flex-row justify-around items-center text-gray-700">
+          <div className="flex items-center space-x-2 mb-4 sm:mb-0">
+            <span className="text-teal-600 text-xl">📧</span>
+            <span>hello@reallygreatsite.com</span>
+          </div>
+          <div className="flex items-center space-x-2 mb-4 sm:mb-0">
+            <span className="text-teal-600 text-xl">📞</span>
+            <span>+123-456-7890</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <span className="text-teal-600 text-xl">📍</span>
+            <span>123 Anywhere St., Any City</span>
+          </div>
         </div>
       </div>
     </div>
   );
-}
+};
 
-
-
-
+export default Home;
 
 

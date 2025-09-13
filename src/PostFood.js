@@ -1,144 +1,141 @@
-import React, { useState, useEffect } from "react";
-import { db, auth } from "./Firebase/firebase";
-import { addDoc, collection, serverTimestamp, getDocs } from "firebase/firestore";
+import React, { useState } from "react";
+import { db, storage, auth } from "./Firebase/firebase";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Link, useNavigate } from "react-router-dom";
 import { signOut } from "firebase/auth";
 
-export default function PostFood() {
+const PostFood = () => {
   const [meal, setMeal] = useState("");
   const [location, setLocation] = useState("");
-  const [ngoId, setNgoId] = useState("");   // ✅ Selected NGO
-  const [ngos, setNgos] = useState([]);     // ✅ NGO list
+  const [ngo, setNgo] = useState("");
+  const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
   const navigate = useNavigate();
 
-  // ✅ Fetch NGOs
-  useEffect(() => {
-    const fetchNgos = async () => {
-      const querySnapshot = await getDocs(collection(db, "ngos"));
-      setNgos(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    };
-    fetchNgos();
-  }, []);
-
-  // ✅ Logout
   const handleLogout = () => {
     signOut(auth);
     navigate("/login");
   };
 
-  // ✅ Convert location to lat/lng (OpenStreetMap)
-  const getCoordinates = async (address) => {
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`
-      );
-      const data = await response.json();
-      if (data.length > 0) {
-        return {
-          lat: parseFloat(data[0].lat),
-          lng: parseFloat(data[0].lon),
-        };
-      }
-      return null;
-    } catch (err) {
-      console.error("Geocoding error:", err);
-      return null;
-    }
-  };
-
-  // ✅ Handle form submit
-  const handleSubmit = async (e) => {
+  const handlePostFood = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     try {
-      const coords = await getCoordinates(location);
+      console.log("🔵 Starting post...");
+      let imageUrl = "";
 
-      await addDoc(collection(db, "posts"), {
+      // 1️⃣ Upload image if file exists
+      if (file) {
+        console.log("🟢 Uploading file:", file.name);
+        const storageRef = ref(storage, `meals/${Date.now()}_${file.name}`);
+        const snapshot = await uploadBytes(storageRef, file);
+        console.log("✅ File uploaded:", snapshot.metadata.fullPath);
+
+        imageUrl = await getDownloadURL(snapshot.ref);
+        console.log("✅ Got download URL:", imageUrl);
+      }
+
+      // 2️⃣ Save post in Firestore
+      const docRef = await addDoc(collection(db, "posts"), {
         meal,
         location,
-        lat: coords ? coords.lat : null,
-        lng: coords ? coords.lng : null,
-        ngoId,
-        userId: auth.currentUser.uid,
-        userEmail: auth.currentUser.email,
+        ngo,
+        imageUrl,
+        userId: auth.currentUser?.uid,
         createdAt: serverTimestamp(),
       });
 
+      console.log("✅ Post saved with ID:", docRef.id);
+
+      // Reset form
       setMeal("");
       setLocation("");
-      setNgoId("");
-      alert("Meal posted successfully ✅");
+      setNgo("");
+      setFile(null);
+      alert("✅ Meal posted successfully!");
     } catch (err) {
-      console.error("Error posting meal:", err);
-      setError("Failed to post meal.");
+      console.error("❌ Error posting meal:", err);
+      setError("Failed to post meal. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
-    <div>
-      {/* ✅ Navbar */}
+    <div className="min-h-screen bg-gray-100">
+      {/* ✅ Inline Navbar */}
       <nav className="bg-blue-600 text-white p-4 flex justify-between fixed top-0 left-0 right-0 shadow-md z-50">
-        <h1 className="text-xl font-bold">ShareABite</h1>
-        <div className="space-x-4">
+        <h1 className="text-xl font-bold tracking-wide">🍽 Share a Meal</h1>
+        <div className="space-x-6 hidden sm:flex">
           <Link to="/home" className="hover:underline">Home</Link>
           <Link to="/myposts" className="hover:underline">My Posts</Link>
-          <button onClick={handleLogout} className="hover:underline">Logout</button>
+          <Link to="/Ngos" className="hover:underline">NGOs</Link>
+          <button onClick={handleLogout} className="hover:underline">
+            Logout
+          </button>
         </div>
       </nav>
 
-      {/* ✅ Form Section */}
-      <div className="p-6 mt-20">
-        <h2 className="text-xl font-semibold mb-4">Share a Meal</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
+      {/* ✅ Centered Form */}
+      <div className="flex justify-center items-center pt-24">
+        <form
+          onSubmit={handlePostFood}
+          className="bg-white p-8 shadow-lg rounded-2xl w-96"
+        >
+          <h2 className="text-xl font-bold mb-4 text-center">🍲 Share a Meal</h2>
+
           <input
             type="text"
-            placeholder="Meal name"
+            placeholder="Meal Name"
             value={meal}
             onChange={(e) => setMeal(e.target.value)}
+            className="border w-full mb-3 p-2 rounded"
             required
-            className="border p-2 w-full rounded"
           />
           <input
             type="text"
-            placeholder="Location (e.g. Nagpur, India)"
+            placeholder="Location"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
+            className="border w-full mb-3 p-2 rounded"
             required
-            className="border p-2 w-full rounded"
           />
-
-          {/* ✅ NGO Dropdown */}
           <select
-            value={ngoId}
-            onChange={(e) => setNgoId(e.target.value)}
+            value={ngo}
+            onChange={(e) => setNgo(e.target.value)}
+            className="border w-full mb-3 p-2 rounded"
             required
-            className="border p-2 w-full rounded"
           >
             <option value="">Select NGO</option>
-            {ngos.map((ngo) => (
-              <option key={ngo.id} value={ngo.id}>
-                {ngo.name}
-              </option>
-            ))}
+            <option value="CHALO KHUSHIYAN BATEIN">CHALO KHUSHIYAN BATEIN</option>
+            <option value="jesus force foundation">jesus force foundation</option>
           </select>
+
+          <input
+            type="file"
+            onChange={(e) => setFile(e.target.files[0])}
+            className="border w-full mb-3 p-2 rounded"
+          />
 
           <button
             type="submit"
+            className="bg-blue-600 text-white w-full p-2 rounded disabled:opacity-50"
             disabled={loading}
-            className="bg-blue-600 text-white px-4 py-2 rounded"
           >
             {loading ? "Posting..." : "Post Food"}
           </button>
+
+          {error && <p className="text-red-500 mt-2 text-center">{error}</p>}
         </form>
-        {error && <p className="text-red-500 mt-2">{error}</p>}
       </div>
     </div>
   );
-}
+};
+
+export default PostFood;
 

@@ -56,8 +56,9 @@ export default function MyPosts() {
         <h1 className="text-xl font-bold">ShareABite</h1>
         <div className="space-x-4">
           <Link to="/home" className="hover:underline">Home</Link>
-          <Link to="/myposts" className="hover:underline">My Posts</Link>
           <Link to="/postfood" className="hover:underline">Post Food</Link>
+          <Link to="/allngos" className="hover:underline">NGOs</Link>
+
           <button onClick={handleLogout} className="hover:underline">Logout</button>
         </div>
       </nav>

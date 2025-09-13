@@ -4,7 +4,8 @@ import Signup from "./Signup";
 import Home from "./Home";
 import PostFood from "./PostFood";
 import MyPosts from "./MyPosts";
-import Ngos from "./NGOs";   // ✅ Import NGOs page
+import Ngos from "./NGOs";   // ✅ Admin-only NGO management page
+import AllNgos from "./AllNgos"; // ✅ New page to display all NGOs
 import ProtectedRoute from "./ProtectedRoute";
 
 function App() {
@@ -41,10 +42,19 @@ function App() {
           }
         />
         <Route
-          path="/Ngos"
+          path="/ngos"
           element={
             <ProtectedRoute>
               <Ngos />
+            </ProtectedRoute>
+          }
+        />
+        {/* ✅ New Route for NGO Listing */}
+        <Route
+          path="/allngos"
+          element={
+            <ProtectedRoute>
+              <AllNgos />
             </ProtectedRoute>
           }
         />

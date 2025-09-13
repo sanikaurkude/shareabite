@@ -1,7 +1,10 @@
-
+// src/firebase.js
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";  // ✅ ADD THIS
+
+
 
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
@@ -13,13 +16,25 @@ const firebaseConfig = {
   appId: "1:211493624960:web:3839b71eef408e67cb5a65",
   measurementId: "G-KGJ7JMD3PB"
 };
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app); // ✅ ADD THIS
 
-// Auth + Providers
-export const auth = getAuth(app);
-export const provider = new GoogleAuthProvider();
+const googleProvider = new GoogleAuthProvider();
 
-// Firestore
-export const db = getFirestore(app);
+const signInWithGoogle = async () => {
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    console.log("User Info:", result.user);
+    return result.user;
+  } catch (error) {
+    console.error("Google Sign-in Error:", error);
+    throw error;
+  }
+};
 
-export default app;
+export { auth, db, storage, signInWithGoogle }; // ✅ EXPORT STORAGE
+
+
